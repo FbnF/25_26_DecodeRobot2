@@ -1,0 +1,52 @@
+/*
+============================================================
+ TELEOP CONTROL MAP
+============================================================
+
+GAMEPAD 1  (DRIVER)
+------------------------------------------------------------
+ Right Stick (Y)                    Drive Forward / Backward
+ Left Stick (X)                     Strafe Left / Right
+ Right Stick (X)                    Rotate (Turn)
+ A Button                           High Speed Mode (0.95)
+ B Button                           Low Speed Mode  (0.40)
+ X Button                           Normal Speed Mode (0.70)
+ Y Button                           Unused
+ D-Pad Down                         Toggle Vision (on/off)
+ D-Pad (Up, Left, Right)            Unused
+ Right Trigger/Bumper               Unused
+ Left Trigger/Bumper                Unused
+
+------------------------------------------------------------
+GAMEPAD 2  (OPERATOR)
+------------------------------------------------------------
+ D-Pad Up                           Switch to AUTO shooter mode
+ D-Pad Down                         Switch to MANUAL shooter mode
+ D-Pad Right                        Arm / Disarm auto-spin (AUTO mode only)
+ D-Pad Left                         Unused
+
+ A Button                           Long-range shooter preset (Manual)
+ B Button                           Mid-range shooter preset  (Manual)
+ Left Bumper                        Short-range shooter preset (Manual)
+ X Button                           Stop shooter (Manual)
+ Y Button                           Feed ring (fires only when shooter ready)
+
+ Right Trigger                      Intake forward
+ Left Trigger                       Stop intake
+ Right Bumper                       Reverse intake
+
+------------------------------------------------------------
+AUTOMATIC LOGIC
+------------------------------------------------------------
+ - Shooter only spins in AUTO mode if armed (D-Pad Right).
+ - Servo feed (Y) works only when flywheel is at target velocity.
+ - LED Status:
+       Off (BLACK)  -> Vision disabled
+       Red          -> No or incorrect tag detected
+       Yellow       -> Correct tag detected, not at speed / not armed
+       Green        -> Correct tag detected, flywheel ready
+       Flash Yellow -> Driver pressed Y too early
+ - Alliance goal tag hardcoded via GOAL_TAG_ID (20 = blue, 24 = red)
+ - Logging toggle via LOG_ENABLED boolean
+============================================================
+*/
