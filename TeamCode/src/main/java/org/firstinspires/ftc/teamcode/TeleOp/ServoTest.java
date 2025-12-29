@@ -42,7 +42,7 @@ public class ServoTest extends LinearOpMode {
                 Servo2.setPosition(0.25);
             }
             if(gamepad1.y){
-                Servo3.setPositionS(0.25);
+                Servo3.setPosition(0.25);
             }
             if(gamepad1.x){
                 LoadServo.setPosition(0.5);

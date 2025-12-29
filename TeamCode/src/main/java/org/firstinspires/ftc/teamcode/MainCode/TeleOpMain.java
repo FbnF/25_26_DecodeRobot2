@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -29,9 +30,11 @@ public class TeleOpMain extends LinearOpMode {
 
     // --- Hardware ---
     private Servo feedServo;
+    private Servo hoodServo;
     private MecanumDrive drive;
     private DcMotorEx intakeMotor;
     private DcMotorEx launchMotor;
+    private DcMotorEx launchMotor2;
     private RevBlinkinLedDriver blinkin; // LED
     private VoltageSensor battery;
 
@@ -79,57 +82,62 @@ public class TeleOpMain extends LinearOpMode {
     private long feedPulseStartNs = 0;
     private static final long FEED_DWELL_NS = 150_000_000L; // 150 ms
 
-    //edge state for GP1 dpad-down (vision toggle)
+    // edge state for GP1 dpad-down (vision toggle)
     private boolean prevG1DpadDown = false;
+
+    // ---------------- HOOD SERVO FIX ----------------
+    // Persisted hood position + edge detection so it steps once per press
+    private double hoodServoPos = 0.0;
+    private static final double HOOD_STEP = 0.05;
+    private boolean prevG1DpadLeft = false;
+    private boolean prevG1DpadRight = false;
 
     @Override
     public void runOpMode() {
 
         // Map hardware
-        feedServo   = hardwareMap.get(Servo.class,    "feedServo");
-        intakeMotor = hardwareMap.get(DcMotorEx.class,"IntakeMotor");
-        launchMotor = hardwareMap.get(DcMotorEx.class,"LaunchMotor");
-        battery     = hardwareMap.voltageSensor.iterator().next();
+        feedServo    = hardwareMap.get(Servo.class, "feedServo");
+        hoodServo    = hardwareMap.get(Servo.class, "hoodServo");
+        intakeMotor  = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
+        launchMotor  = hardwareMap.get(DcMotorEx.class, "LaunchMotor");
+        launchMotor2 = hardwareMap.get(DcMotorEx.class, "LaunchMotor2");
+        battery      = hardwareMap.voltageSensor.iterator().next();
 
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
         blinkin.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
 
+        // Initial positions
         feedServo.setPosition(0.0);
         isFeedServoDown = false;
 
+        hoodServoPos = 0.0;                 // start hood at 0.0
+        hoodServo.setPosition(hoodServoPos);
+
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         launchMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launchMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         launchMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launchMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // launchMotor2.setDirection(DcMotor.Direction.REVERSE);
+
         // intake runs open-loop (no encoder feedback)
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Drive (verify your constructor signature)
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         // Vision
         tagService = new AprilTagService();
-        //tagService.start(hardwareMap);
-
-        // LOG: create CSV logger
-        if (LOG_ENABLED) {
-            logger = TinyCsvLoggerFlex.create(
-                    hardwareMap,
-                    "teleop_main",
-                    TinyCsvLoggerFlex.doubleCol("launch_cmd", () -> (autoShooter ? shooterSetpointTPS : launchPower)),
-                    TinyCsvLoggerFlex.motorEx("launch", launchMotor),
-                    TinyCsvLoggerFlex.doubleCol("intake_cmd", () -> intakePower),
-                    TinyCsvLoggerFlex.motorEx("intake", intakeMotor),
-                    TinyCsvLoggerFlex.servoPos("feed_pos", feedServo),
-                    TinyCsvLoggerFlex.pose2d("pose", () -> drive.localizer.getPose())
-            );
-        }
+        // tagService.start(hardwareMap);
 
         waitForStart();
 
         // Safe startup
         intakeMotor.setPower(0.0);
         launchMotor.setPower(0.0);
+        launchMotor2.setPower(0.0);
 
         while (opModeIsActive()) {
 
@@ -140,11 +148,24 @@ public class TeleOpMain extends LinearOpMode {
             if (gamepad1.b) speedFactor = 0.4;
             if (gamepad1.x) speedFactor = 0.7;
 
+            // ---------------- HOOD SERVO CONTROL (FIXED) ----------------
+            // Edge detect so one press = one step, and we clamp to [0, 1]
+            boolean leftEdge  = gamepad1.dpad_left  && !prevG1DpadLeft;
+            boolean rightEdge = gamepad1.dpad_right && !prevG1DpadRight;
+
+            if (leftEdge)  hoodServoPos += HOOD_STEP;
+            if (rightEdge) hoodServoPos -= HOOD_STEP;
+
+            hoodServoPos = clamp01(hoodServoPos);
+            hoodServo.setPosition(hoodServoPos);
+
+            prevG1DpadLeft  = gamepad1.dpad_left;
+            prevG1DpadRight = gamepad1.dpad_right;
+
             double axial   = -gamepad1.right_stick_y * speedFactor; // up = forward (+x)
             double lateral = -gamepad1.left_stick_x  * speedFactor; // right = strafe right (−y)
             double heading = -gamepad1.right_stick_x * speedFactor; // right = turn right (−CCW = CW)
 
-            // Keep a single call
             drive.setDrivePowers(new PoseVelocity2d(new Vector2d(axial, lateral), heading));
 
             // Update odometry and read pose
@@ -174,18 +195,20 @@ public class TeleOpMain extends LinearOpMode {
                 autoShooter = true;
                 autoSpinArmed = false;
                 launchMotor.setPower(0.0);
+                launchMotor2.setPower(0.0);
             }
             if (downEdge) {
                 autoShooter = false;
                 autoSpinArmed = false;
                 launchMotor.setPower(0.0);
+                launchMotor2.setPower(0.0);
             }
             prevDpadUp = gamepad2.dpad_up;
             prevDpadDown = gamepad2.dpad_down;
 
             // Dpad-right → arm auto spin
-            boolean rightEdge = gamepad2.dpad_right && !prevDpadRight;
-            if (rightEdge && autoShooter) {
+            boolean rightEdge2 = gamepad2.dpad_right && !prevDpadRight;
+            if (rightEdge2 && autoShooter) {
                 autoSpinArmed = !autoSpinArmed;
             }
             prevDpadRight = gamepad2.dpad_right;
@@ -201,6 +224,7 @@ public class TeleOpMain extends LinearOpMode {
                 double vbat = battery.getVoltage();
                 double scaledPower = Math.min(1.0, launchPower * (12.0 / vbat));
                 launchMotor.setPower(scaledPower);
+                launchMotor2.setPower(scaledPower);
             }
 
             // --------------------------- AUTO MODE ----------------------------
@@ -218,23 +242,27 @@ public class TeleOpMain extends LinearOpMode {
                                 ShooterConfig.TICKS_PER_REV
                         );
                         if (!Double.isNaN(tps) && Double.isFinite(tps)) {
-                            if (ShooterConfig.TEST_TPS > 0){
+                            if (ShooterConfig.TEST_TPS > 0) {
                                 tps = ShooterConfig.TEST_TPS;
                             }
                             tps = Math.min(tps, ShooterConfig.TPS_MAX);
                             shooterSetpointTPS = tps;      // set after overrides/clamp
                             launchMotor.setVelocity(tps);  // single call
+                            launchMotor2.setVelocity(tps);
                         } else {
                             shooterSetpointTPS = 0.0;
                             launchMotor.setPower(0.0);
+                            launchMotor2.setPower(0.0);
                         }
                     } else {
                         shooterSetpointTPS = 0.0;
                         launchMotor.setPower(0.0);
+                        launchMotor2.setPower(0.0);
                     }
                 } else {
                     shooterSetpointTPS = 0.0;
                     launchMotor.setPower(0.0);
+                    launchMotor2.setPower(0.0);
                 }
             }
 
@@ -246,7 +274,8 @@ public class TeleOpMain extends LinearOpMode {
             } else if (!autoShooter) {
                 spunUpOk = (launchMotor.getPower() > 0.0);
             }
-            if (gamepad2.y){
+
+            if (gamepad2.y) {
                 if (!feedPulseActive && spunUpOk) {
                     feedServo.setPosition(0.75);
                     feedPulseActive = true;
@@ -300,6 +329,13 @@ public class TeleOpMain extends LinearOpMode {
             Double visInches = getVisionDistanceInches();
             int tagId = (r != null && r.hasTag) ? r.id : -1;
 
+            telemetry.addLine("---- Drive ----");
+            telemetry.addData("Speed Factor", "%.2f", speedFactor);
+
+            telemetry.addLine("---- Hood ----");
+            telemetry.addData("hoodPosCmd", "%.2f", hoodServoPos);
+            telemetry.addData("hoodPosReported", "%.2f", hoodServo.getPosition());
+
             telemetry.addLine("---- Shooter ----");
             telemetry.addData("Mode", autoShooter ? "AUTO" : "MANUAL");
             telemetry.addData("Armed", autoSpinArmed);
@@ -337,5 +373,11 @@ public class TeleOpMain extends LinearOpMode {
         double d = r.smoothedDistanceIn;
         if (!TagConfig.USE_RANGE && !Double.isNaN(d)) d = Math.abs(d);
         return Double.isNaN(d) ? null : d;
+    }
+
+    private static double clamp01(double v) {
+        if (v < 0.0) return 0.0;
+        if (v > 1.0) return 1.0;
+        return v;
     }
 }
