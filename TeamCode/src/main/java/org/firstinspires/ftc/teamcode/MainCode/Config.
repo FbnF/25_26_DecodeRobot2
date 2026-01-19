@@ -1,0 +1,13 @@
+Expansion Hub:
+LaunchMotor: Port 0
+LauncherMotor2: Port 1
+IntakeMotor: Port 2
+blinkin: Port 0(Servo)
+
+Control Hub:
+hoodServo: Port 0(Servo)
+feedServo: Port 1(Servo)
+leftFront: Port 2
+leftBack: Port 3
+rightFront: Port 0
+rightBack: Port 1
