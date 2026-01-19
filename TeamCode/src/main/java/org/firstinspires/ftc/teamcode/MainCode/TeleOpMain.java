@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.MainCode;
 // --- Roadrunner Libraries ---
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Trajectory;
 import com.acmerobotics.roadrunner.Vector2d;
 
 // --- FTC Libraries ---
@@ -35,6 +36,7 @@ public class TeleOpMain extends LinearOpMode {
     private DcMotorEx intakeMotor;
     private DcMotorEx launchMotor;
     private DcMotorEx launchMotor2;
+    private DcMotorEx TurretMotor;
     private RevBlinkinLedDriver blinkin; // LED
     private VoltageSensor battery;
 
@@ -101,6 +103,7 @@ public class TeleOpMain extends LinearOpMode {
         intakeMotor  = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
         launchMotor  = hardwareMap.get(DcMotorEx.class, "LaunchMotor");
         launchMotor2 = hardwareMap.get(DcMotorEx.class, "LaunchMotor2");
+        TurretMotor = hardwareMap.get(DcMotorEx.class, "TurretMotor");
         battery      = hardwareMap.voltageSensor.iterator().next();
 
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
@@ -119,6 +122,7 @@ public class TeleOpMain extends LinearOpMode {
 
         launchMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launchMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        TurretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // launchMotor2.setDirection(DcMotor.Direction.REVERSE);
 
         // intake runs open-loop (no encoder feedback)

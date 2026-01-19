@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@Disabled
 @Autonomous(name = "chacha", group = "RoadRunner")
 public class chachaSlideDemo extends LinearOpMode {
     @Override

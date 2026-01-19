@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@Disabled
 @Autonomous(name = "RR v1.0 - All Motions Demo (Corrected Tangents)", group = "RoadRunner")
 public class AllMotionsDemo extends LinearOpMode {
     @Override

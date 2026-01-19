@@ -33,6 +33,11 @@ import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -63,13 +68,13 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 0.002934;
-        public double lateralInPerTick = 0.002152807647553116;
-        public double trackWidthTicks = 4686.225749980024;
+        public double inPerTick = 0.0029559779;
+        public double lateralInPerTick = 0.0023323636369363267;
+        public double trackWidthTicks = 4101.07743364596;
 
         // feedforward parameters (in tick units)
-        public double kS = 0.965;//1.6225290253277156;
-        public double kV = 0.0005727; //0.0005729172663920725;//0.0005770632627021179;
+        public double kS = 0.8522327984639043;//0.9722327984639043
+        public double kV = 0.0005404556403526625;//0.0005704556403526625; //0.0005729172663920725;//0.0005770632627021179;
         public double kA = 0.0001;
 
         // path profile parameters (in inches)
@@ -85,7 +90,7 @@ public final class MecanumDrive {
         // path controller gains
         public double axialGain = 5.75;
         public double lateralGain = 1.5;
-        public double headingGain = 1; // shared with turn
+        public double headingGain = 6.75; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -101,6 +106,7 @@ public final class MecanumDrive {
             PARAMS.maxAngVel, -PARAMS.maxAngAccel, PARAMS.maxAngAccel);
     public final VelConstraint defaultVelConstraint =
             new MinVelConstraint(Arrays.asList(
+                    kinematics.new WheelVelConstraint(PARAMS.maxWheelVel),
                     kinematics.new WheelVelConstraint(PARAMS.maxWheelVel),
                     new AngularVelConstraint(PARAMS.maxAngVel)
             ));
