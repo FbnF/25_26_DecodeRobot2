@@ -16,7 +16,7 @@ public class MeepMeepApp {
         MeepMeep meepMeep = new MeepMeep(800);
 
         // FTC autonomous start pose
-        Pose2d startPose = new Pose2d(60, -16, Math.toRadians(180));
+        Pose2d startPose = new Pose2d(-48, -48, Math.toRadians(225));
         // Old code: always spline to (0, 0, 225)
         Pose2d splineTarget = new Pose2d(0, 0, Math.toRadians(225));
 
@@ -27,32 +27,51 @@ public class MeepMeepApp {
         myBot.runAction(
                 myBot.getDrive().actionBuilder(startPose)
                         // First spline and shoot
-                        .splineToLinearHeading(splineTarget, Math.PI / 2)
-                        .turn(Math.toRadians(45))
-                        // First artifact round
-                        .setTangent(0)
-                        .lineToX(-10)
-                        .setTangent(Math.PI / 2)
-                        .strafeTo(new Vector2d(-10, -52))
-                        // Second spline and shoot
-                        .setTangent(0)
-                        .splineToLinearHeading(splineTarget, Math.PI / 2)
-                        .turn(Math.toRadians(45))
-                        .setTangent(0)
-                        .lineToX(10)
-                        .setTangent(Math.PI / 2)
-                        .strafeTo(new Vector2d(10, -52))
-                        // Third spline and shoot
-                        .setTangent(0)
-                        .splineToLinearHeading(splineTarget, Math.PI / 2)
-                        .turn(Math.toRadians(45))
-                        .setTangent(0)
-                        .lineToX(34)
-                        .setTangent(Math.PI / 2)
-                        .strafeTo(new Vector2d(34, -52))
-                        // Fourth/final spline and shoot
-                        .setTangent(0)
-                        .splineToLinearHeading(splineTarget, Math.PI / 2)
+                        .setTangent(Math.toRadians(225))
+
+
+                        .strafeTo(new Vector2d(-20, -20))
+
+                        // Shooter runs
+
+
+                        .splineToLinearHeading(new Pose2d(-12, -24,Math.toRadians(270)),Math.toRadians(270))
+
+                        .lineToY(-48)
+                        .lineToY(-45)
+
+                        .strafeToLinearHeading(new Vector2d(-20, -20), Math.toRadians(225))
+
+                        // Shooter runs
+                        //Clear
+                        .strafeToLinearHeading(new Vector2d(0, -40), Math.toRadians(180))
+                        .strafeToLinearHeading(new Vector2d(0, -54), Math.toRadians(180))
+                        .strafeToLinearHeading(new Vector2d(0, -20), Math.toRadians(180))
+
+                        .splineToLinearHeading(new Pose2d(12, -24,Math.toRadians(270)),Math.toRadians(270))
+                        .lineToY(-52)
+                        .lineToY(-45)
+
+
+                        .strafeToLinearHeading(new Vector2d(-20,-20), Math.toRadians(225))
+
+
+
+
+                        //Collect
+                        .splineToLinearHeading(new Pose2d(20, -50,Math.toRadians(270)), Math.toRadians(270))
+                        .strafeToLinearHeading(new Vector2d(20, -60), Math.toRadians(270))
+                        //Shoot
+                        .strafeToLinearHeading(new Vector2d(-20,-20), Math.toRadians(225))
+                        .strafeToLinearHeading(new Vector2d(0, -40), Math.toRadians(180))
+                        .strafeToLinearHeading(new Vector2d(0, -54), Math.toRadians(180))
+                        .strafeToLinearHeading(new Vector2d(0, -40), Math.toRadians(180))
+                        //Collect
+                        .splineToLinearHeading(new Pose2d(20, -50,Math.toRadians(270)), Math.toRadians(270))
+                        .strafeToLinearHeading(new Vector2d(20, -60), Math.toRadians(270))
+                        //Shoot
+                        .strafeToLinearHeading(new Vector2d(-36, -12), Math.toRadians(250))
+
                         .build()
         );
 

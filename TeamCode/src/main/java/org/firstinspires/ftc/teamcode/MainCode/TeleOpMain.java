@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
@@ -30,7 +31,7 @@ import org.firstinspires.ftc.teamcode.MainCode.util.TinyCsvLoggerFlex;
 public class TeleOpMain extends LinearOpMode {
 
     // --- Hardware ---
-    private Servo feedServo;
+    private CRServo feedServo;
     private Servo hoodServo;
     private MecanumDrive drive;
     private DcMotorEx intakeMotor;
@@ -98,7 +99,7 @@ public class TeleOpMain extends LinearOpMode {
     public void runOpMode() {
 
         // Map hardware
-        feedServo    = hardwareMap.get(Servo.class, "feedServo");
+        feedServo    = hardwareMap.get(CRServo.class, "feedServo");
         hoodServo    = hardwareMap.get(Servo.class, "hoodServo");
         intakeMotor  = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
         launchMotor  = hardwareMap.get(DcMotorEx.class, "LaunchMotor");
@@ -110,8 +111,7 @@ public class TeleOpMain extends LinearOpMode {
         blinkin.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
 
         // Initial positions
-        feedServo.setPosition(0.0);
-        isFeedServoDown = false;
+
 
         hoodServoPos = 0.0;                 // start hood at 0.0
         hoodServo.setPosition(hoodServoPos);
@@ -169,7 +169,8 @@ public class TeleOpMain extends LinearOpMode {
             double axial   = -gamepad1.right_stick_y * speedFactor; // up = forward (+x)
             double lateral = -gamepad1.left_stick_x  * speedFactor; // right = strafe right (−y)
             double heading = -gamepad1.right_stick_x * speedFactor; // right = turn right (−CCW = CW)
-
+            double turret   = -gamepad2.left_stick_x * 0.5;
+            TurretMotor.setPower(turret);
             drive.setDrivePowers(new PoseVelocity2d(new Vector2d(axial, lateral), heading));
 
             // Update odometry and read pose
@@ -278,27 +279,34 @@ public class TeleOpMain extends LinearOpMode {
             } else if (!autoShooter) {
                 spunUpOk = (launchMotor.getPower() > 0.0);
             }
-
+            boolean feedAllowed = spunUpOk;
             if (gamepad2.y) {
-                if (!feedPulseActive && spunUpOk) {
-                    feedServo.setPosition(0.75);
-                    feedPulseActive = true;
-                    feedPulseStartNs = System.nanoTime();
-                } else if (!spunUpOk) {
-                    yTooSoonFlashUntilNs = System.nanoTime() + FLASH_YELLOW_NS;
+                if (feedAllowed) {
+                    feedServo.setPower(1);
+
+                } else if (!feedAllowed) {
+                    //yTooSoonFlashUntilNs = System.nanoTime() + FLASH_YELLOW_NS;
                 }
             }
-
-            if (feedPulseActive && System.nanoTime() - feedPulseStartNs >= FEED_DWELL_NS) {
-                feedServo.setPosition(0.0);
-                feedPulseActive = false;
+            if(gamepad2.dpad_left){
+                feedServo.setPower(0);
             }
 
+       /*     if (feedPulseActive && System.nanoTime() - feedPulseStartNs >= FEED_DWELL_NS) {
+                feedServo.setPower(0.0);
+                feedPulseActive = false;
+            }
+            if(intakeMotorPulseActive && System.nanoTime() - intakePulseStartNs >= INTAKE_DWELL_NS){
+                intakeMotor.setPower(0.0);
+                intakeMotorPulseActive = false;
+            }
+
+        */
             // --------------------------- INTAKE -------------------------------
             boolean rbEdge = gamepad2.right_bumper && !prevRB;
-            if (rbEdge) intakePower = 0.5;
+            if (rbEdge) intakePower = -1;
             prevRB = gamepad2.right_bumper;
-            if (gamepad2.right_trigger > 0) intakePower = -1;
+            if (gamepad2.right_trigger > 0) intakePower = 1;
             if (gamepad2.left_trigger > 0) intakePower = 0.0;
             intakeMotor.setPower(intakePower);
 
