@@ -31,12 +31,13 @@ import org.firstinspires.ftc.teamcode.MainCode.util.TinyCsvLoggerFlex;
 public class TeleOpSimple extends LinearOpMode {
 
     double speedFactor = 0.7;
-
+    private DcMotorEx intakeMotor;
 
     @Override
     public void runOpMode() {
 
 
+        intakeMotor  = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
 
@@ -52,7 +53,10 @@ public class TeleOpSimple extends LinearOpMode {
             double lateral = -gamepad1.left_stick_x * speedFactor; // right = strafe right (−y)
             double heading = -gamepad1.right_stick_x * speedFactor; // right = turn right (−CCW = CW)
             drive.setDrivePowers(new PoseVelocity2d(new Vector2d(axial, lateral), heading));
-
+            if (gamepad2.a) intakeMotor.setPower(1.0);
+            if (gamepad2.b) intakeMotor.setPower(0.5);
+            if (gamepad2.y) intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+            if (gamepad2.x) intakeMotor.setPower(0.0);
         }
     }
 }
