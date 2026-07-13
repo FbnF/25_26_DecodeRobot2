@@ -55,7 +55,15 @@ public class TeleOpSimple extends LinearOpMode {
             drive.setDrivePowers(new PoseVelocity2d(new Vector2d(axial, lateral), heading));
             if (gamepad2.a) intakeMotor.setPower(1.0);
             if (gamepad2.b) intakeMotor.setPower(0.5);
-            if (gamepad2.y) intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+            boolean reversed = false;
+            if (gamepad2.y & !reversed) {
+                intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+                reversed=true;
+            }
+            if(gamepad2.y & reversed){
+                intakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+                reversed = false;
+            }
             if (gamepad2.x) intakeMotor.setPower(0.0);
         }
     }
