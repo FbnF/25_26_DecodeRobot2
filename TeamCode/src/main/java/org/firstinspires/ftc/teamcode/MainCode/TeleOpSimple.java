@@ -32,15 +32,18 @@ public class TeleOpSimple extends LinearOpMode {
 
     double speedFactor = 0.7;
     private DcMotorEx intakeMotor;
+    private CRServo intakeServo1;
+    private CRServo intakeServo2;
 
     @Override
     public void runOpMode() {
 
 
-        intakeMotor  = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "IntakeMotor");
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-
-
+        intakeServo1 = hardwareMap.get(CRServo.class, "intakeServo1");
+        intakeServo2 = hardwareMap.get(CRServo.class, "intakeServo1");
+        intakeServo2.setDirection(CRServo.Direction.REVERSE);
 
         waitForStart();
 
@@ -53,18 +56,19 @@ public class TeleOpSimple extends LinearOpMode {
             double lateral = -gamepad1.left_stick_x * speedFactor; // right = strafe right (−y)
             double heading = -gamepad1.right_stick_x * speedFactor; // right = turn right (−CCW = CW)
             drive.setDrivePowers(new PoseVelocity2d(new Vector2d(axial, lateral), heading));
-            if (gamepad2.a) intakeMotor.setPower(1.0);
-            if (gamepad2.b) intakeMotor.setPower(0.5);
-            boolean reversed = false;
-            if (gamepad2.y & !reversed) {
-                intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-                reversed=true;
-            }
-            if(gamepad2.y & reversed){
-                intakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-                reversed = false;
-            }
+            if (gamepad2.right_trigger > 0) intakeMotor.setPower(1.0);
+            if (gamepad2.right_bumper) intakeMotor.setPower(0.5);
+            if (gamepad2.left_trigger > 0) intakeMotor.setPower(-1.0);
+            if (gamepad2.left_bumper) intakeMotor.setPower(-0.5);
             if (gamepad2.x) intakeMotor.setPower(0.0);
+            if (gamepad2.a){
+                 intakeServo1.setPower(1.0);
+                intakeServo2.setPower(1.0);
+            }
+            if (gamepad2.b){
+                intakeServo1.setPower(-1.0);
+                intakeServo2.setPower(-1.0);
+            }
         }
     }
 }
